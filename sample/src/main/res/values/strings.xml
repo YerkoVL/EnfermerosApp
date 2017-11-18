@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Tránsito</string>
+    <string name="account_balance">Saldo disponible</string>
+    <string name="balance_currency">S/.</string>
+    <string name="balance_amount">0.00</string>
+    <string name="token_app">pk.eyJ1IjoieWVya292ZXJhbGV6YW1hIiwiYSI6ImNpc25mYjE3bjA1MTcycG14YWNvaW04eHUifQ.WpUwec_XfCBz7psGHrBeAg</string>
+</resources>
