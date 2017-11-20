@@ -16,6 +16,10 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+        repositories {
+            mavenCentral()
+            maven { url "http://oss.sonatype.org/content/repositories/snapshots/" }
+        }
     }
 }
 
@@ -23,7 +27,15 @@ dependencies {
     compile 'com.android.support:appcompat-v7:26.0.0'
     compile "com.android.support:design:$supportLibVersion"
     compile "com.android.support:recyclerview-v7:$supportLibVersion"
-    compile ('com.mapbox.mapboxsdk:mapbox-android-sdk:5.2.0-beta.1@aar'){
-        transitive=true
+    compile project(path: ':library')
+    compile('com.mapbox.mapboxsdk:mapbox-android-sdk:5.2.0@aar') {
+        transitive = true
     }
+    compile 'com.mapbox.mapboxsdk:mapbox-android-services:2.3.0-SNAPSHOT'
+    compile 'com.github.d-max:spots-dialog:0.7@aar'
+    compile 'com.jakewharton:butterknife:8.8.1'
+    compile 'com.appolica:flubber:1.0.1'
+    compile 'com.github.florent37:materialtextfield:1.0.7'
+    compile 'com.mcxiaoke.volley:library:1.0.19'
+    compile 'com.facebook.android:facebook-login:[4,5)'
 }

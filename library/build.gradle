@@ -9,6 +9,13 @@ android {
         minSdkVersion 16
         targetSdkVersion rootProject.ext.targetSdkVersion
     }
+
+    allprojects {
+        repositories {
+            mavenCentral()
+            maven { url "http://oss.sonatype.org/content/repositories/snapshots/" }
+        }
+    }
 }
 
 dependencies {
