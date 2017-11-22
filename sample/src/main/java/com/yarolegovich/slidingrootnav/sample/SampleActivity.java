@@ -1,12 +1,13 @@
 package com.yarolegovich.slidingrootnav.sample;
 
-import android.support.v4.app.Fragment;
 import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
+import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.ColorInt;
 import android.support.annotation.ColorRes;
 import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -14,22 +15,33 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
 import com.mapbox.mapboxsdk.Mapbox;
+import com.mapbox.mapboxsdk.annotations.MarkerOptions;
 import com.mapbox.mapboxsdk.annotations.PolylineOptions;
 import com.mapbox.mapboxsdk.camera.CameraPosition;
+import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
 import com.mapbox.mapboxsdk.constants.Style;
 import com.mapbox.mapboxsdk.geometry.LatLng;
-import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.MapboxMapOptions;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 import com.mapbox.mapboxsdk.maps.SupportMapFragment;
+import com.mapbox.mapboxsdk.plugins.locationlayer.LocationLayerMode;
+import com.mapbox.mapboxsdk.plugins.locationlayer.LocationLayerPlugin;
+import com.mapbox.services.android.location.LostLocationEngine;
+import com.mapbox.services.android.telemetry.location.LocationEngine;
+import com.mapbox.services.android.telemetry.location.LocationEnginePriority;
+import com.mapbox.services.android.telemetry.permissions.PermissionsManager;
+import com.mapbox.services.android.ui.geocoder.GeocoderAutoCompleteView;
 import com.mapbox.services.api.directions.v5.DirectionsCriteria;
 import com.mapbox.services.api.directions.v5.MapboxDirections;
 import com.mapbox.services.api.directions.v5.models.DirectionsResponse;
 import com.mapbox.services.api.directions.v5.models.DirectionsRoute;
+import com.mapbox.services.api.geocoding.v5.GeocodingCriteria;
+import com.mapbox.services.api.geocoding.v5.models.CarmenFeature;
 import com.mapbox.services.commons.geojson.LineString;
 import com.mapbox.services.commons.models.Position;
 import com.yarolegovich.slidingrootnav.SlidingRootNav;
@@ -63,11 +75,13 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
 
     private String[] screenTitles;
     private Drawable[] screenIcons;
-
-    private MapView mapView;
-    private MapboxMap map;
     private DirectionsRoute currentRoute;
     private MapboxDirections client;
+
+    private LatLng originCoord;
+    private LocationEngine locationEngine;
+    private Location originLocation;
+    private LocationLayerPlugin locationPlugin;
 
     private SlidingRootNav slidingRootNav;
 
@@ -88,14 +102,14 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
             // Create fragment
             transaction = getSupportFragmentManager().beginTransaction();
 
-            LatLng patagonia = new LatLng(-12.0432, -77.0283);
+            LatLng lima = new LatLng(-12.04318, -77.02824);
 
             // Build mapboxMap
             MapboxMapOptions options = new MapboxMapOptions();
             options.styleUrl(Style.MAPBOX_STREETS);
             options.camera(new CameraPosition.Builder()
-                    .target(patagonia)
-                    .zoom(9)
+                    .target(lima)
+                    .zoom(8)
                     .build());
 
             // Create map fragment
@@ -104,6 +118,19 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
             // Add map fragment to parent container
             transaction.add(R.id.container, mapFragment, "com.mapbox.map");
             transaction.commit();
+
+            // Set up autocomplete widget
+            GeocoderAutoCompleteView autocomplete = (GeocoderAutoCompleteView) findViewById(R.id.query);
+            autocomplete.setAccessToken(Mapbox.getAccessToken());
+            autocomplete.setType(GeocodingCriteria.TYPE_POI);
+            autocomplete.setOnFeatureListener(new GeocoderAutoCompleteView.OnFeatureListener() {
+                @Override
+                public void onFeatureClick(CarmenFeature feature) {
+                    hideOnScreenKeyboard();
+                    Position position = feature.asPosition();
+                    updateMap(position.getLatitude(), position.getLongitude());
+                }
+            });
         } else {
             mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentByTag("com.mapbox.map");
         }
@@ -112,6 +139,9 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
             @Override
             public void onMapReady(MapboxMap mapboxMap) {
                 // Customize map with markers, polylines, etc.
+
+                enableLocationPlugin();
+                originCoord = new LatLng(originLocation.getLatitude(), originLocation.getLongitude());
             }
         });
 
@@ -143,6 +173,65 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
         list.setAdapter(adapter);
 
         adapter.setSelected(POS_DASHBOARD);
+    }
+
+    @SuppressWarnings( {"MissingPermission"})
+    private void enableLocationPlugin() {
+        // Check if permissions are enabled and if not request
+        if (PermissionsManager.areLocationPermissionsGranted(this)) {
+            // Create an instance of LOST location engine
+            initializeLocationEngine();
+
+            locationPlugin = new LocationLayerPlugin(mapView, map, locationEngine);
+            locationPlugin.setLocationLayerEnabled(LocationLayerMode.TRACKING);
+        } else {
+            permissionsManager = new PermissionsManager(this);
+            permissionsManager.requestLocationPermissions(this);
+        }
+    }
+
+    @SuppressWarnings( {"MissingPermission"})
+    private void initializeLocationEngine() {
+        locationEngine = new LostLocationEngine(SampleActivity.this);
+        locationEngine.setPriority(LocationEnginePriority.HIGH_ACCURACY);
+        locationEngine.activate();
+
+        Location lastLocation = locationEngine.getLastLocation();
+        if (lastLocation != null) {
+            originLocation = lastLocation;
+            setCameraPosition(lastLocation);
+        } else {
+            locationEngine.addLocationEngineListener(this);
+        }
+    }
+
+    private void hideOnScreenKeyboard() {
+        try {
+            InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+            if (getCurrentFocus() != null) {
+                imm.hideSoftInputFromWindow(this.getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+            }
+        } catch (Exception exception) {
+            throw new RuntimeException(exception);
+        }
+    }
+
+    private void updateMap(final double latitude, final double longitude) {
+        // Animate camera to geocoder result location
+        final CameraPosition cameraPosition = new CameraPosition.Builder()
+                .target(new LatLng(latitude, longitude))
+                .zoom(15)
+                .build();
+
+        mapFragment.getMapAsync(new OnMapReadyCallback() {
+            @Override
+            public void onMapReady(MapboxMap mapboxMap) {
+                mapboxMap.addMarker(new MarkerOptions()
+                        .position(new LatLng(latitude, longitude))
+                        .title(getString(R.string.geocode_activity_marker_options_title)));
+                mapboxMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition), 5000, null);
+            }
+        });
     }
 
     private void getRoute(Position origin, Position destination) {
@@ -254,7 +343,7 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
     private Drawable[] loadScreenIcons() {
         TypedArray ta = getResources().obtainTypedArray(R.array.ld_activityScreenIcons);
         Drawable[] icons = new Drawable[ta.length()];
-        for (int i = 0; i < ta.length(); i++) {
+        for (int i = 0; i <= ta.length(); i++) {
             int id = ta.getResourceId(i, 0);
             if (id != 0) {
                 icons[i] = ContextCompat.getDrawable(this, id);
