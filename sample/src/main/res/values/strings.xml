@@ -8,7 +8,7 @@
     <string name="facebook_app_id">384397321997956</string>
     <string name="fb_login_protocol_scheme">fb384397321997956</string>
 
-    <string name="directions_activity_toast_message">Route is %1$f meters long.</string>
-    <string name="geocode_activity_marker_options_title">Geocoder result</string>
+    <string name="directions_activity_toast_message">Routa esta a %1$f metros.</string>
+    <string name="geocode_activity_marker_options_title">Resultado de Búsqueda</string>
     <string name="direction_to_go">¿Donde necesita la atención?</string>
 </resources>

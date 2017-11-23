@@ -43,6 +43,14 @@
             android:padding="10dp"
             android:textColor="@android:color/black" />
 
+        <Button
+            android:id="@+id/btnMiUbicacion"
+            android:gravity="end|clip_vertical"
+            android:layout_gravity="end|bottom"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:background="@drawable/icn_location" />
+
     </FrameLayout>
 
 </LinearLayout>

@@ -1,8 +1,8 @@
 package com.yarolegovich.slidingrootnav.sample;
 
+import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
-import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.ColorInt;
 import android.support.annotation.ColorRes;
@@ -15,9 +15,15 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.google.gson.Gson;
 import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.annotations.MarkerOptions;
 import com.mapbox.mapboxsdk.annotations.PolylineOptions;
@@ -29,12 +35,6 @@ import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.MapboxMapOptions;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 import com.mapbox.mapboxsdk.maps.SupportMapFragment;
-import com.mapbox.mapboxsdk.plugins.locationlayer.LocationLayerMode;
-import com.mapbox.mapboxsdk.plugins.locationlayer.LocationLayerPlugin;
-import com.mapbox.services.android.location.LostLocationEngine;
-import com.mapbox.services.android.telemetry.location.LocationEngine;
-import com.mapbox.services.android.telemetry.location.LocationEnginePriority;
-import com.mapbox.services.android.telemetry.permissions.PermissionsManager;
 import com.mapbox.services.android.ui.geocoder.GeocoderAutoCompleteView;
 import com.mapbox.services.api.directions.v5.DirectionsCriteria;
 import com.mapbox.services.api.directions.v5.MapboxDirections;
@@ -46,11 +46,14 @@ import com.mapbox.services.commons.geojson.LineString;
 import com.mapbox.services.commons.models.Position;
 import com.yarolegovich.slidingrootnav.SlidingRootNav;
 import com.yarolegovich.slidingrootnav.SlidingRootNavBuilder;
+import com.yarolegovich.slidingrootnav.sample.conexion.Singleton;
+import com.yarolegovich.slidingrootnav.sample.entity.results;
 import com.yarolegovich.slidingrootnav.sample.fragment.PerfilFragment;
 import com.yarolegovich.slidingrootnav.sample.menu.DrawerAdapter;
 import com.yarolegovich.slidingrootnav.sample.menu.DrawerItem;
 import com.yarolegovich.slidingrootnav.sample.menu.SimpleItem;
 import com.yarolegovich.slidingrootnav.sample.menu.SpaceItem;
+import com.yarolegovich.slidingrootnav.sample.tools.GenericAlerts;
 
 import java.util.Arrays;
 import java.util.List;
@@ -78,12 +81,9 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
     private DirectionsRoute currentRoute;
     private MapboxDirections client;
 
-    private LatLng originCoord;
-    private LocationEngine locationEngine;
-    private Location originLocation;
-    private LocationLayerPlugin locationPlugin;
-
     private SlidingRootNav slidingRootNav;
+
+    private MapboxMap mapBoxGeneral;
 
     FragmentTransaction transaction;
     SupportMapFragment mapFragment;
@@ -93,6 +93,9 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Mapbox.getInstance(this, getString(R.string.token_app));
+
+        Gson gson = new Gson();
+        GenericAlerts alertas = new GenericAlerts();
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -107,6 +110,7 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
             // Build mapboxMap
             MapboxMapOptions options = new MapboxMapOptions();
             options.styleUrl(Style.MAPBOX_STREETS);
+            options.logoEnabled(false);
             options.camera(new CameraPosition.Builder()
                     .target(lima)
                     .zoom(8)
@@ -122,7 +126,9 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
             // Set up autocomplete widget
             GeocoderAutoCompleteView autocomplete = (GeocoderAutoCompleteView) findViewById(R.id.query);
             autocomplete.setAccessToken(Mapbox.getAccessToken());
-            autocomplete.setType(GeocodingCriteria.TYPE_POI);
+            autocomplete.setType(GeocodingCriteria.TYPE_POI_LANDMARK);
+            autocomplete.setCountry("PE");
+            autocomplete.setLanguages("ES");
             autocomplete.setOnFeatureListener(new GeocoderAutoCompleteView.OnFeatureListener() {
                 @Override
                 public void onFeatureClick(CarmenFeature feature) {
@@ -131,6 +137,24 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
                     updateMap(position.getLatitude(), position.getLongitude());
                 }
             });
+
+            autocomplete.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                @Override
+                public boolean onEditorAction(TextView textView, int actionId, KeyEvent keyEvent) {
+                    boolean action = false;
+                    if (keyEvent.getKeyCode() == KeyEvent.KEYCODE_ENTER)
+                    {
+                        //hide keyboard
+                        InputMethodManager inputMethodManager = (InputMethodManager) textView.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                        inputMethodManager.hideSoftInputFromWindow(textView.getWindowToken(), 0);
+
+                        Toast.makeText(SampleActivity.this, textView.getText().toString(), Toast.LENGTH_SHORT).show();
+                        action = true;
+                    }
+                    return action;
+                }
+            });
+
         } else {
             mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentByTag("com.mapbox.map");
         }
@@ -139,9 +163,7 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
             @Override
             public void onMapReady(MapboxMap mapboxMap) {
                 // Customize map with markers, polylines, etc.
-
-                enableLocationPlugin();
-                originCoord = new LatLng(originLocation.getLatitude(), originLocation.getLongitude());
+                mapBoxGeneral = mapboxMap;
             }
         });
 
@@ -175,36 +197,6 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
         adapter.setSelected(POS_DASHBOARD);
     }
 
-    @SuppressWarnings( {"MissingPermission"})
-    private void enableLocationPlugin() {
-        // Check if permissions are enabled and if not request
-        if (PermissionsManager.areLocationPermissionsGranted(this)) {
-            // Create an instance of LOST location engine
-            initializeLocationEngine();
-
-            locationPlugin = new LocationLayerPlugin(mapView, map, locationEngine);
-            locationPlugin.setLocationLayerEnabled(LocationLayerMode.TRACKING);
-        } else {
-            permissionsManager = new PermissionsManager(this);
-            permissionsManager.requestLocationPermissions(this);
-        }
-    }
-
-    @SuppressWarnings( {"MissingPermission"})
-    private void initializeLocationEngine() {
-        locationEngine = new LostLocationEngine(SampleActivity.this);
-        locationEngine.setPriority(LocationEnginePriority.HIGH_ACCURACY);
-        locationEngine.activate();
-
-        Location lastLocation = locationEngine.getLastLocation();
-        if (lastLocation != null) {
-            originLocation = lastLocation;
-            setCameraPosition(lastLocation);
-        } else {
-            locationEngine.addLocationEngineListener(this);
-        }
-    }
-
     private void hideOnScreenKeyboard() {
         try {
             InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
@@ -220,18 +212,14 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
         // Animate camera to geocoder result location
         final CameraPosition cameraPosition = new CameraPosition.Builder()
                 .target(new LatLng(latitude, longitude))
-                .zoom(15)
+                .zoom(16)
+                .bearing(50)
                 .build();
 
-        mapFragment.getMapAsync(new OnMapReadyCallback() {
-            @Override
-            public void onMapReady(MapboxMap mapboxMap) {
-                mapboxMap.addMarker(new MarkerOptions()
-                        .position(new LatLng(latitude, longitude))
-                        .title(getString(R.string.geocode_activity_marker_options_title)));
-                mapboxMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition), 5000, null);
-            }
-        });
+        mapBoxGeneral.addMarker(new MarkerOptions()
+                .position(new LatLng(latitude, longitude))
+                .title(getString(R.string.geocode_activity_marker_options_title)));
+        mapBoxGeneral.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition), 5000, null);
     }
 
     private void getRoute(Position origin, Position destination) {
@@ -289,7 +277,7 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
         }
 
         // Draw Points on MapView
-        map.addPolyline(new PolylineOptions()
+        mapBoxGeneral.addPolyline(new PolylineOptions()
                 .add(points)
                 .color(getColor(R.color.linearColor))
                 .width(5));
@@ -356,5 +344,51 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
     @ColorInt
     private int color(@ColorRes int res) {
         return ContextCompat.getColor(this, res);
+    }
+
+    public void busquedaLugar(String lugarBuscar) {
+
+        lugarBuscar = lugarBuscar.replace(" ", "+");
+
+        final String url = "http://maps.googleapis.com/maps/api/geocode/json?address=" + lugarBuscar;
+
+        //progressDialog.show();
+        //progressDialog.setContentView(R.layout.content_progress_action);
+
+        StringRequest respuestaLogin = new StringRequest(Request.Method.GET,url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String Response) {
+
+                        if(Response!=null) {
+                            try {
+                                Usuario usuario = gson.fromJson(Response, Usuario.class);
+                                if(usuario.getNombres()!=null) {
+                                    //progressDialog.dismiss();
+                                }else{
+                                    results respuesta = gson.fromJson(Response,Respuesta.class);
+                                    //progressDialog.dismiss();
+                                }
+                            }catch (Exception e){
+                                e.printStackTrace();
+                                alertas.mensajeInfo("Error al obtener dirección, porfavor ","None",mCtx);
+                                //progressDialog.dismiss();
+                            }
+                        }else{
+                            Respuesta respuesta = gson.fromJson(Response,Respuesta.class);
+                            alertas.mensajeInfo("Fallo Login",respuesta.getMensaje(),mCtx);
+                            //progressDialog.dismiss();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError e) {
+                e.printStackTrace();
+                //progressDialog.dismiss();
+                alertas.mensajeInfo("Fallo Login","Error Desconocido",mCtx);
+            }
+        });
+
+        Singleton.getInstance(this).addToRequestQueue(respuestaLogin);
     }
 }

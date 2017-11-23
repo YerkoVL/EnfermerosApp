@@ -9,6 +9,7 @@ android {
         targetSdkVersion 26
         versionCode 1
         versionName "1.0"
+        multiDexEnabled true
     }
 
     buildTypes {
@@ -42,10 +43,12 @@ dependencies {
     compile 'com.mapbox.mapboxsdk:mapbox-android-telemetry:2.2.9'
     compile 'com.mapbox.mapboxsdk:mapbox-android-ui:2.2.9'
     compile 'com.mapbox.mapboxsdk:mapbox-android-navigation:0.7.1-SNAPSHOT'
-    compile 'com.github.d-max:spots-dialog:0.7@aar'
     compile 'com.jakewharton:butterknife:8.8.1'
     compile 'com.appolica:flubber:1.0.1'
+    compile 'com.yarolegovich:lovely-dialog:1.0.7'
     compile 'com.github.florent37:materialtextfield:1.0.7'
     compile 'com.mcxiaoke.volley:library:1.0.19'
     compile 'com.facebook.android:facebook-login:[4,5)'
+    compile 'com.android.support:multidex:1.0.1'
+    compile 'com.google.code.gson:gson:2.8.1'
 }
