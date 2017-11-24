@@ -3,6 +3,7 @@ package com.yarolegovich.slidingrootnav.sample;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.Icon;
 import android.os.Bundle;
 import android.support.annotation.ColorInt;
 import android.support.annotation.ColorRes;
@@ -16,16 +17,22 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.QuickContactBadge;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.VolleyError;
+import com.android.volley.VolleyLog;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.google.gson.Gson;
 import com.mapbox.mapboxsdk.Mapbox;
+import com.mapbox.mapboxsdk.annotations.Marker;
 import com.mapbox.mapboxsdk.annotations.MarkerOptions;
+import com.mapbox.mapboxsdk.annotations.MarkerView;
 import com.mapbox.mapboxsdk.annotations.PolylineOptions;
 import com.mapbox.mapboxsdk.camera.CameraPosition;
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
@@ -47,14 +54,21 @@ import com.mapbox.services.commons.models.Position;
 import com.yarolegovich.slidingrootnav.SlidingRootNav;
 import com.yarolegovich.slidingrootnav.SlidingRootNavBuilder;
 import com.yarolegovich.slidingrootnav.sample.conexion.Singleton;
+import com.yarolegovich.slidingrootnav.sample.entity.ServiceDoctor;
 import com.yarolegovich.slidingrootnav.sample.entity.results;
 import com.yarolegovich.slidingrootnav.sample.fragment.PerfilFragment;
 import com.yarolegovich.slidingrootnav.sample.menu.DrawerAdapter;
 import com.yarolegovich.slidingrootnav.sample.menu.DrawerItem;
 import com.yarolegovich.slidingrootnav.sample.menu.SimpleItem;
 import com.yarolegovich.slidingrootnav.sample.menu.SpaceItem;
+import com.yarolegovich.slidingrootnav.sample.tools.AdapterServicios;
 import com.yarolegovich.slidingrootnav.sample.tools.GenericAlerts;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -74,7 +88,7 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
     private static final int POS_CARD = 3;
     private static final int POS_HISTORY = 4;
     private static final int POS_FAVORITES = 5;
-    private static final int POS_LOGOUT = 6;
+    private static final int POS_LOGOUT = 7;
 
     private String[] screenTitles;
     private Drawable[] screenIcons;
@@ -85,8 +99,20 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
 
     private MapboxMap mapBoxGeneral;
 
+    private Position origenFinal;
+    private Position destinoFinal;
+
     FragmentTransaction transaction;
     SupportMapFragment mapFragment;
+
+    private Marker markerViews;
+
+    private RecyclerView recyclerViewServicios;
+
+    GenericAlerts alertas;
+    Gson gson;
+
+    ArrayList<ServiceDoctor> listaItems = new ArrayList<>();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -94,8 +120,20 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
         setContentView(R.layout.activity_main);
         Mapbox.getInstance(this, getString(R.string.token_app));
 
-        Gson gson = new Gson();
-        GenericAlerts alertas = new GenericAlerts();
+        recyclerViewServicios = (RecyclerView) findViewById(R.id.rcvServicios);
+        recyclerViewServicios.setHasFixedSize(true);
+        LinearLayoutManager MyLayoutManager = new LinearLayoutManager(this);
+        MyLayoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
+
+        asignarVariablesTemporales();
+
+        if (listaItems.size() > 0 & recyclerViewServicios != null) {
+            recyclerViewServicios.setAdapter(new AdapterServicios(listaItems));
+        }
+        recyclerViewServicios.setLayoutManager(MyLayoutManager);
+
+        gson = new Gson();
+        alertas = new GenericAlerts();
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -113,7 +151,7 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
             options.logoEnabled(false);
             options.camera(new CameraPosition.Builder()
                     .target(lima)
-                    .zoom(8)
+                    .zoom(10)
                     .build());
 
             // Create map fragment
@@ -126,7 +164,7 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
             // Set up autocomplete widget
             GeocoderAutoCompleteView autocomplete = (GeocoderAutoCompleteView) findViewById(R.id.query);
             autocomplete.setAccessToken(Mapbox.getAccessToken());
-            autocomplete.setType(GeocodingCriteria.TYPE_POI_LANDMARK);
+            autocomplete.setType(GeocodingCriteria.TYPE_POI);
             autocomplete.setCountry("PE");
             autocomplete.setLanguages("ES");
             autocomplete.setOnFeatureListener(new GeocoderAutoCompleteView.OnFeatureListener() {
@@ -134,7 +172,7 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
                 public void onFeatureClick(CarmenFeature feature) {
                     hideOnScreenKeyboard();
                     Position position = feature.asPosition();
-                    updateMap(position.getLatitude(), position.getLongitude());
+                    destinoFinal = updateMap(position.getLatitude(), position.getLongitude());
                 }
             });
 
@@ -148,7 +186,7 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
                         InputMethodManager inputMethodManager = (InputMethodManager) textView.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
                         inputMethodManager.hideSoftInputFromWindow(textView.getWindowToken(), 0);
 
-                        Toast.makeText(SampleActivity.this, textView.getText().toString(), Toast.LENGTH_SHORT).show();
+                        busquedaLugar(textView.getText().toString());
                         action = true;
                     }
                     return action;
@@ -158,6 +196,9 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
         } else {
             mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentByTag("com.mapbox.map");
         }
+
+        //origenFinal = Position.fromCoordinates(-77.02776552199401,-12.093380082915322);
+        //getRoute(origenFinal,destinoFinal);
 
         mapFragment.getMapAsync(new OnMapReadyCallback() {
             @Override
@@ -185,7 +226,7 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
                 createItemFor(POS_CARD),
                 createItemFor(POS_HISTORY),
                 createItemFor(POS_FAVORITES),
-                new SpaceItem(48),
+                new SpaceItem(10),
                 createItemFor(POS_LOGOUT)));
         adapter.setListener(this);
 
@@ -202,24 +243,37 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
             InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
             if (getCurrentFocus() != null) {
                 imm.hideSoftInputFromWindow(this.getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+                recyclerViewServicios.setVisibility(View.GONE);
             }
         } catch (Exception exception) {
             throw new RuntimeException(exception);
         }
     }
 
-    private void updateMap(final double latitude, final double longitude) {
+    private Position updateMap(final double latitude, final double longitude) {
+        recyclerViewServicios.setVisibility(View.VISIBLE);
+
         // Animate camera to geocoder result location
+        if(markerViews!=null) {
+            mapBoxGeneral.removeMarker(markerViews);
+        }
+
         final CameraPosition cameraPosition = new CameraPosition.Builder()
                 .target(new LatLng(latitude, longitude))
                 .zoom(16)
                 .bearing(50)
+                .tilt(30)
                 .build();
 
-        mapBoxGeneral.addMarker(new MarkerOptions()
+        markerViews = mapBoxGeneral.addMarker(new MarkerOptions()
                 .position(new LatLng(latitude, longitude))
+                .snippet("Servicio " + "- para:" + "Nombre de Usuario")
                 .title(getString(R.string.geocode_activity_marker_options_title)));
         mapBoxGeneral.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition), 5000, null);
+
+        Position destino = Position.fromCoordinates(longitude,latitude);
+
+        return destino;
     }
 
     private void getRoute(Position origin, Position destination) {
@@ -352,43 +406,50 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
 
         final String url = "http://maps.googleapis.com/maps/api/geocode/json?address=" + lugarBuscar;
 
-        //progressDialog.show();
-        //progressDialog.setContentView(R.layout.content_progress_action);
-
-        StringRequest respuestaLogin = new StringRequest(Request.Method.GET,url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String Response) {
-
-                        if(Response!=null) {
-                            try {
-                                Usuario usuario = gson.fromJson(Response, Usuario.class);
-                                if(usuario.getNombres()!=null) {
-                                    //progressDialog.dismiss();
-                                }else{
-                                    results respuesta = gson.fromJson(Response,Respuesta.class);
-                                    //progressDialog.dismiss();
-                                }
-                            }catch (Exception e){
-                                e.printStackTrace();
-                                alertas.mensajeInfo("Error al obtener dirección, porfavor ","None",mCtx);
-                                //progressDialog.dismiss();
-                            }
-                        }else{
-                            Respuesta respuesta = gson.fromJson(Response,Respuesta.class);
-                            alertas.mensajeInfo("Fallo Login",respuesta.getMensaje(),mCtx);
-                            //progressDialog.dismiss();
-                        }
-                    }
-                }, new Response.ErrorListener() {
+        JsonObjectRequest respuestaLogin = new JsonObjectRequest(Request.Method.GET,url, new com.android.volley.Response.Listener<JSONObject>() {
             @Override
-            public void onErrorResponse(VolleyError e) {
-                e.printStackTrace();
-                //progressDialog.dismiss();
-                alertas.mensajeInfo("Fallo Login","Error Desconocido",mCtx);
+            public void onResponse(JSONObject response) {
+                try {
+                    JSONArray nuevo = response.getJSONArray("results");
+                    JSONObject componentesDireccion = (JSONObject) nuevo.get(0);
+                    JSONObject geometria = (JSONObject) componentesDireccion.get("geometry");
+                    JSONObject locacion = (JSONObject) geometria.get("location");
+                        double latitudBusqueda = Float.parseFloat(locacion.get("lat").toString());
+                        double longitudBusqueda = Float.parseFloat(locacion.get("lng").toString());
+                    destinoFinal = updateMap(latitudBusqueda,longitudBusqueda);
+                    }catch (JSONException e) {
+                    e.printStackTrace();
+                    }
+                }
+            }, new com.android.volley.Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                VolleyLog.e("Error: ", error.getMessage());
             }
         });
 
         Singleton.getInstance(this).addToRequestQueue(respuestaLogin);
+    }
+
+    public void asignarVariablesTemporales(){
+        ServiceDoctor inyectableIntramuscular = new ServiceDoctor();
+            inyectableIntramuscular.setImagen(R.drawable.img_inyectable);
+            inyectableIntramuscular.setServicio("Inyectable Intramuscular");
+            inyectableIntramuscular.setPrecio(25);
+            inyectableIntramuscular.setTiempoEstimado("Aproximadamente 15 minutos atención.");
+        ServiceDoctor inyectableIntravenoso = new ServiceDoctor();
+            inyectableIntravenoso.setImagen(R.drawable.img_inyectable_intravenoso);
+            inyectableIntravenoso.setServicio("Inyectable Intramuscular");
+            inyectableIntravenoso.setPrecio(25);
+            inyectableIntravenoso.setTiempoEstimado("Aproximadamente 40 minutos atención.");
+
+        ServiceDoctor colocacionSonda = new ServiceDoctor();
+            colocacionSonda.setImagen(R.drawable.img_sonda);
+            colocacionSonda.setServicio("Colocación de Sonda");
+            colocacionSonda.setPrecio(25);
+            colocacionSonda.setTiempoEstimado("Aproximadamente 30 minutos atención.");
+        listaItems.add(inyectableIntravenoso);
+        listaItems.add(inyectableIntramuscular);
+        listaItems.add(colocacionSonda);
     }
 }
