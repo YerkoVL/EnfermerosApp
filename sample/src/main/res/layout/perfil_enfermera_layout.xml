@@ -7,11 +7,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="350dp"
-            android:src="@drawable/banner_example"/>
-
         <LinearLayout
             android:layout_marginLeft="20dp"
             android:orientation="horizontal"

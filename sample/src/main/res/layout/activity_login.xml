@@ -4,7 +4,14 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.delivery.enfermero.enfermerosapp.LoginActivity">
+    tools:context=".LoginActivity">
+
+    <com.flaviofaria.kenburnsview.KenBurnsView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/imgFondo"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:src="@drawable/img_fondo" />
 
     <LinearLayout
         android:layout_marginTop="70dp"
@@ -37,15 +44,17 @@
                     android:layout_height="wrap_content"
                     app:mtf_image="@drawable/ic_enfermera"
                     app:mtf_openKeyboardOnFocus="true"
-                    app:mtf_labelColor="#000000"
+                    app:mtf_backgroundColor="@color/colorPrimary"
+                    app:mtf_labelColor="@color/com_facebook_button_background_color"
                     app:mtf_hasFocus="false">
 
                     <EditText
                         android:id="@+id/txtUsuario"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:textColor="#000000"
+                        android:textColor="@color/com_facebook_button_background_color"
                         android:hint="Ingrese ID"
+                        android:textColorHint="@color/colorAccent"
                         android:textSize="20sp" />
                 </com.github.florent37.materialtextfield.MaterialTextField>
 
@@ -54,40 +63,94 @@
                     android:layout_height="wrap_content"
                     app:mtf_image="@drawable/ic_password"
                     app:mtf_openKeyboardOnFocus="true"
-                    app:mtf_labelColor="#000000"
+                    app:mtf_backgroundColor="@color/colorPrimary"
+                    app:mtf_labelColor="@color/com_facebook_button_background_color"
                     app:mtf_hasFocus="false">
 
                     <EditText
                         android:id="@+id/txtPassword"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:textColor="#000000"
+                        android:textColor="@color/com_facebook_button_background_color"
                         android:hint="Ingrese contraseña"
                         android:textSize="20sp" />
                 </com.github.florent37.materialtextfield.MaterialTextField>
 
             </LinearLayout>
         </LinearLayout>
-        <LinearLayout
-            android:orientation="horizontal"
+
+        <View
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginTop="20dp">
-            <Button
-                android:id="@+id/btn_enter"
-                android:layout_width="wrap_content"
+            android:layout_marginLeft="56dp"
+            android:layout_marginRight="56dp"
+            android:layout_height="1dp"
+            android:background="#59d58d"/>
+
+        <LinearLayout
+            android:layout_marginTop="8dp"
+            android:id="@+id/linear4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <CheckBox
+                android:layout_weight="2"
+                android:id="@+id/remember"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Ingresar"
-                android:textSize="15dp"/>
+                android:text="Recuerdame"
+                android:textStyle="bold"
+                android:checked="false"
+                android:buttonTint="@color/colorhint"
+                android:textColor="@color/colorhint"
+                android:layout_marginLeft="60dp"
+                android:textSize="11dp" />
+            <TextView
+                android:layout_weight="2.3"
+                android:id="@+id/forgotpass"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="¿Olvidaste tu contraseña?"
+                android:textStyle="bold"
+                android:textColor="@color/colorhint"
+                android:layout_gravity="center"
+                android:textSize="11dp"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/signin1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/rect1"
+            android:text="Ingresar"
+            android:textSize="16dp"
+            android:textColor="#fff"
+            android:gravity="center"
+            android:layout_marginLeft="60dp"
+            android:layout_marginRight="60dp"
+            android:padding="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="6dp"
+            android:elevation="3dp"/>
+
+        <TextView
+            android:id="@+id/or"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="o"
+            android:layout_above="@+id/acc"
+            android:gravity="center"
+            android:lines="1"
+            android:textColor="@color/colorPrimary"/>
 
             <com.facebook.login.widget.LoginButton
                 android:id="@+id/login_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
                 android:layout_gravity="center_horizontal"
-                android:layout_marginTop="30dp"
-                android:layout_marginBottom="30dp" />
-        </LinearLayout>
+                android:gravity="center" />
+
     </LinearLayout>
 
 </RelativeLayout>

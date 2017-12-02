@@ -120,7 +120,7 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
         setContentView(R.layout.activity_main);
         Mapbox.getInstance(this, getString(R.string.token_app));
 
-        recyclerViewServicios = (RecyclerView) findViewById(R.id.rcvServicios);
+        recyclerViewServicios = findViewById(R.id.rcvServicios);
         recyclerViewServicios.setHasFixedSize(true);
         LinearLayoutManager MyLayoutManager = new LinearLayoutManager(this);
         MyLayoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
@@ -128,7 +128,7 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
         asignarVariablesTemporales();
 
         if (listaItems.size() > 0 & recyclerViewServicios != null) {
-            recyclerViewServicios.setAdapter(new AdapterServicios(listaItems));
+            recyclerViewServicios.setAdapter(new AdapterServicios(SampleActivity.this,listaItems, recyclerViewServicios));
         }
         recyclerViewServicios.setLayoutManager(MyLayoutManager);
 

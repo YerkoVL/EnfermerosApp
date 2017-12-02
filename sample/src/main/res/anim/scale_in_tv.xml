@@ -6,5 +6,6 @@
     android:toXScale="110%"
     android:toYScale="110%"
     android:pivotX="50%"
+    android:fillAfter="true"
     android:pivotY="50%">
 </scale>

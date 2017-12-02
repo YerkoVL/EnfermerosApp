@@ -52,4 +52,5 @@ dependencies {
     compile 'com.facebook.android:facebook-login:[4,5)'
     compile 'com.android.support:multidex:1.0.1'
     compile 'com.google.code.gson:gson:2.8.1'
+    compile 'com.flaviofaria:kenburnsview:1.0.7'
 }
