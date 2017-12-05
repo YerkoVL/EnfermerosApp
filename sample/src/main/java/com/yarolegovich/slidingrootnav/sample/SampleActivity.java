@@ -1,9 +1,9 @@
 package com.yarolegovich.slidingrootnav.sample;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.Icon;
 import android.os.Bundle;
 import android.support.annotation.ColorInt;
 import android.support.annotation.ColorRes;
@@ -15,11 +15,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.QuickContactBadge;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,12 +25,11 @@ import com.android.volley.Request;
 import com.android.volley.VolleyError;
 import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.StringRequest;
+import com.facebook.login.LoginManager;
 import com.google.gson.Gson;
 import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.annotations.Marker;
 import com.mapbox.mapboxsdk.annotations.MarkerOptions;
-import com.mapbox.mapboxsdk.annotations.MarkerView;
 import com.mapbox.mapboxsdk.annotations.PolylineOptions;
 import com.mapbox.mapboxsdk.camera.CameraPosition;
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
@@ -51,18 +48,19 @@ import com.mapbox.services.api.geocoding.v5.GeocodingCriteria;
 import com.mapbox.services.api.geocoding.v5.models.CarmenFeature;
 import com.mapbox.services.commons.geojson.LineString;
 import com.mapbox.services.commons.models.Position;
+import com.yarolegovich.lovelydialog.LovelyStandardDialog;
 import com.yarolegovich.slidingrootnav.SlidingRootNav;
 import com.yarolegovich.slidingrootnav.SlidingRootNavBuilder;
+import com.yarolegovich.slidingrootnav.sample.adapters.AdapterServicios;
 import com.yarolegovich.slidingrootnav.sample.conexion.Singleton;
 import com.yarolegovich.slidingrootnav.sample.entity.ServiceDoctor;
-import com.yarolegovich.slidingrootnav.sample.entity.results;
 import com.yarolegovich.slidingrootnav.sample.fragment.PerfilFragment;
 import com.yarolegovich.slidingrootnav.sample.menu.DrawerAdapter;
 import com.yarolegovich.slidingrootnav.sample.menu.DrawerItem;
 import com.yarolegovich.slidingrootnav.sample.menu.SimpleItem;
 import com.yarolegovich.slidingrootnav.sample.menu.SpaceItem;
-import com.yarolegovich.slidingrootnav.sample.tools.AdapterServicios;
 import com.yarolegovich.slidingrootnav.sample.tools.GenericAlerts;
+import com.yarolegovich.slidingrootnav.sample.tools.YourPreference;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -108,9 +106,12 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
     private Marker markerViews;
 
     private RecyclerView recyclerViewServicios;
+    GeocoderAutoCompleteView autocomplete;
 
     GenericAlerts alertas;
     Gson gson;
+
+    YourPreference preferencias;
 
     ArrayList<ServiceDoctor> listaItems = new ArrayList<>();
 
@@ -124,6 +125,8 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
         recyclerViewServicios.setHasFixedSize(true);
         LinearLayoutManager MyLayoutManager = new LinearLayoutManager(this);
         MyLayoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
+
+        preferencias = YourPreference.getInstance(this);
 
         asignarVariablesTemporales();
 
@@ -162,7 +165,7 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
             transaction.commit();
 
             // Set up autocomplete widget
-            GeocoderAutoCompleteView autocomplete = (GeocoderAutoCompleteView) findViewById(R.id.query);
+            autocomplete = (GeocoderAutoCompleteView) findViewById(R.id.query);
             autocomplete.setAccessToken(Mapbox.getAccessToken());
             autocomplete.setType(GeocodingCriteria.TYPE_POI);
             autocomplete.setCountry("PE");
@@ -292,18 +295,18 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
                 System.out.println(call.request().url().toString());
 
                 // You can get the generic HTTP info about the response
-                Log.d(TAG, "Response code: " + response.code());
+                //Log.d(TAG, "Response code: " + response.code());
                 if (response.body() == null) {
-                    Log.e(TAG, "No routes found, make sure you set the right user and access token.");
+                    //Log.e(TAG, "No routes found, make sure you set the right user and access token.");
                     return;
                 } else if (response.body().getRoutes().size() < 1) {
-                    Log.e(TAG, "No routes found");
+                    //Log.e(TAG, "No se encontraron rutas");
                     return;
                 }
 
                 // Print some info about the route
                 currentRoute = response.body().getRoutes().get(0);
-                Log.d(TAG, "Distance: " + currentRoute.getDistance());
+                //Log.d(TAG, "Distancia: " + currentRoute.getDistance());
                 Toast.makeText(SampleActivity.this, String.format(getString(R.string.directions_activity_toast_message),
                         currentRoute.getDistance()), Toast.LENGTH_SHORT).show();
 
@@ -313,7 +316,7 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
 
             @Override
             public void onFailure(Call<DirectionsResponse> call, Throwable throwable) {
-                Log.e(TAG, "Error: " + throwable.getMessage());
+                //Log.e(TAG, "Error: " + throwable.getMessage());
                 Toast.makeText(SampleActivity.this, "Error: " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
@@ -340,22 +343,28 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
     @Override
     public void onItemSelected(int position) {
         if (position == POS_LOGOUT) {
-            finish();
+            finalizarActividad();
         }else if(position == 0){
+            mostrarCampos();
             showFragment(mapFragment);
         }else if(position == POS_ACCOUNT){
+            ocultarCampos();
             android.support.v4.app.Fragment perfil = new PerfilFragment();
             showFragment(perfil);
         }else if(position == POS_MESSAGES){
+            ocultarCampos();
             Fragment perfil = new Fragment();
             showFragment(perfil);
         }else if(position == POS_CARD){
+            ocultarCampos();
             Fragment perfil = new Fragment();
             showFragment(perfil);
         }else if(position == POS_HISTORY){
+            ocultarCampos();
             Fragment perfil = new Fragment();
             showFragment(perfil);
         }else if(position == POS_FAVORITES){
+            ocultarCampos();
             Fragment perfil = new Fragment();
             showFragment(perfil);
         }
@@ -431,6 +440,16 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
         Singleton.getInstance(this).addToRequestQueue(respuestaLogin);
     }
 
+    public void ocultarCampos(){
+        recyclerViewServicios.setVisibility(View.GONE);
+        autocomplete.setVisibility(View.GONE);
+    }
+
+    public void mostrarCampos(){
+        recyclerViewServicios.setVisibility(View.VISIBLE);
+        autocomplete.setVisibility(View.VISIBLE);
+    }
+
     public void asignarVariablesTemporales(){
         ServiceDoctor inyectableIntramuscular = new ServiceDoctor();
             inyectableIntramuscular.setImagen(R.drawable.img_inyectable);
@@ -451,5 +470,35 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
         listaItems.add(inyectableIntravenoso);
         listaItems.add(inyectableIntramuscular);
         listaItems.add(colocacionSonda);
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            finalizarActividad();
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    public void finalizarActividad(){
+        new LovelyStandardDialog(SampleActivity.this)
+                .setTopColorRes(R.color.colorPrimary)
+                .setButtonsColorRes(R.color.colorAccent)
+                .setIcon(R.drawable.ic_enfermera)
+                .setTitle("¿Desea cerrar sesión?")
+                .setMessage("Se cerrará todas las sesiones iniciadas.")
+                .setPositiveButton(android.R.string.ok, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        preferencias.eliminarPreferencias(SampleActivity.this);
+                        LoginManager.getInstance().logOut();
+                        Intent intent = new Intent(SampleActivity.this, LoginActivity.class);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                    }
+                })
+                .setNegativeButton(android.R.string.no, null)
+                .show();
     }
 }

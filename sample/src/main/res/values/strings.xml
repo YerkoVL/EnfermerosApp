@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Tránsito</string>
+    <string name="app_name">Enfermeros App</string>
     <string name="account_balance">Saldo disponible</string>
     <string name="balance_currency">S/.</string>
     <string name="balance_amount">0.00</string>
@@ -11,4 +11,6 @@
     <string name="directions_activity_toast_message">Ruta esta a %1$f metros.</string>
     <string name="geocode_activity_marker_options_title">Mi ubicación</string>
     <string name="direction_to_go">¿Donde necesita la atención?</string>
+
+    <string name="fragment_pago_agregar_tarjeta">Agregar Tarjeta</string>
 </resources>

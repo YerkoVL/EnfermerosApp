@@ -1,4 +1,4 @@
-package com.yarolegovich.slidingrootnav.sample.tools;
+package com.yarolegovich.slidingrootnav.sample.adapters;
 
 import android.app.Activity;
 import android.support.v7.widget.RecyclerView;
