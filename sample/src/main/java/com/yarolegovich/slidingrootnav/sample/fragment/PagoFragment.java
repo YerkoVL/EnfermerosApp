@@ -1,6 +1,6 @@
 package com.yarolegovich.slidingrootnav.sample.fragment;
 
-import android.app.Fragment;
+import android.support.v4.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -16,6 +16,8 @@ import com.cooltechworks.creditcarddesign.CreditCardUtils;
 import com.cooltechworks.creditcarddesign.CreditCardView;
 import com.yarolegovich.slidingrootnav.sample.R;
 
+import static android.app.Activity.RESULT_OK;
+
 public class PagoFragment extends Fragment{
 
     private final int CREAR_NUEVA_TARJETA = 0;
@@ -28,11 +30,12 @@ public class PagoFragment extends Fragment{
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.pago_fragment_layout, container, false);
 
         ctx = getActivity().getApplicationContext();
+
         inicializar();
         escuchadores();
+        return inflater.inflate(R.layout.pago_fragment_layout, container, false);
     }
 
     public void inicializar(){
@@ -40,7 +43,7 @@ public class PagoFragment extends Fragment{
     }
 
     public void poblar(){
-        CreditCardView sampleCreditCardView = new CreditCardView(this);
+        CreditCardView sampleCreditCardView = new CreditCardView(ctx);
 
         String name = "Yerko Vera";
         String cvv = "420";
@@ -68,7 +71,7 @@ public class PagoFragment extends Fragment{
                 String cardHolderName = creditCardView.getCardHolderName();
                 String cvv = creditCardView.getCVV();
 
-                Intent intent = new Intent(PagoFragment.this, CardEditActivity.class);
+                Intent intent = new Intent(ctx, CardEditActivity.class);
                 intent.putExtra(CreditCardUtils.EXTRA_CARD_HOLDER_NAME, cardHolderName);
                 intent.putExtra(CreditCardUtils.EXTRA_CARD_NUMBER, cardNumber);
                 intent.putExtra(CreditCardUtils.EXTRA_CARD_EXPIRY, expiry);
@@ -83,6 +86,50 @@ public class PagoFragment extends Fragment{
     }
 
     public void escuchadores(){
+        agregarTarjeta.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(ctx, CardEditActivity.class);
+                startActivityForResult(intent, CREAR_NUEVA_TARJETA);
+            }
+        });
+    }
+
+    public void onActivityResult(int reqCode, int resultCode, Intent data) {
+
+        if (resultCode == RESULT_OK) {
+//            Debug.printToast("Result Code is OK", getApplicationContext());
+
+            String name = data.getStringExtra(CreditCardUtils.EXTRA_CARD_HOLDER_NAME);
+            String cardNumber = data.getStringExtra(CreditCardUtils.EXTRA_CARD_NUMBER);
+            String expiry = data.getStringExtra(CreditCardUtils.EXTRA_CARD_EXPIRY);
+            String cvv = data.getStringExtra(CreditCardUtils.EXTRA_CARD_CVV);
+
+            if (reqCode == CREAR_NUEVA_TARJETA) {
+
+                CreditCardView creditCardView = new CreditCardView(ctx);
+
+                creditCardView.setCVV(cvv);
+                creditCardView.setCardHolderName(name);
+                creditCardView.setCardExpiry(expiry);
+                creditCardView.setCardNumber(cardNumber);
+
+                contenedorTarjetas.addView(creditCardView);
+                int index = contenedorTarjetas.getChildCount() - 1;
+                agregarTarjeta(index, creditCardView);
+
+            } else {
+
+                CreditCardView creditCardView = (CreditCardView) contenedorTarjetas.getChildAt(reqCode);
+
+                creditCardView.setCardExpiry(expiry);
+                creditCardView.setCardNumber(cardNumber);
+                creditCardView.setCardHolderName(name);
+                creditCardView.setCVV(cvv);
+
+            }
+        }
 
     }
+
 }

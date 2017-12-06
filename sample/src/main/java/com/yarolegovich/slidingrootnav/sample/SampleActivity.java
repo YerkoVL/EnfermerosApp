@@ -54,6 +54,7 @@ import com.yarolegovich.slidingrootnav.SlidingRootNavBuilder;
 import com.yarolegovich.slidingrootnav.sample.adapters.AdapterServicios;
 import com.yarolegovich.slidingrootnav.sample.conexion.Singleton;
 import com.yarolegovich.slidingrootnav.sample.entity.ServiceDoctor;
+import com.yarolegovich.slidingrootnav.sample.fragment.PagoFragment;
 import com.yarolegovich.slidingrootnav.sample.fragment.PerfilFragment;
 import com.yarolegovich.slidingrootnav.sample.menu.DrawerAdapter;
 import com.yarolegovich.slidingrootnav.sample.menu.DrawerItem;
@@ -357,8 +358,8 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
             showFragment(perfil);
         }else if(position == POS_CARD){
             ocultarCampos();
-            Fragment perfil = new Fragment();
-            showFragment(perfil);
+            android.support.v4.app.Fragment pago = new PagoFragment();
+            showFragment(pago);
         }else if(position == POS_HISTORY){
             ocultarCampos();
             Fragment perfil = new Fragment();
