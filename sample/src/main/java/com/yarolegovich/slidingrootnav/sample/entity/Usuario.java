@@ -4,7 +4,7 @@ public class Usuario {
     public String Id;
     public int IdUsuario;
     public int IdTipoDocumento;
-    public int TipoDocumento;
+    public String TipoDocumento;
     public int NroDocumento;
     public String Nombres;
     public String Apellidos;
@@ -31,7 +31,7 @@ public class Usuario {
     public Usuario() {
     }
 
-    public Usuario(String id, int idUsuario, int idTipoDocumento, int tipoDocumento, int nroDocumento, String nombres, String apellidos, String correo, int telefono, String direccion, String nombreUsuario, String password, String latitud, String longitud, int idPerfil, String perfil, String idDpto, String dpto, int idDistrito, String distrito, String fechaLogueo, float rating, String imagen, String key, int idEstado, String desc_Estado) {
+    public Usuario(String id, int idUsuario, int idTipoDocumento, String tipoDocumento, int nroDocumento, String nombres, String apellidos, String correo, int telefono, String direccion, String nombreUsuario, String password, String latitud, String longitud, int idPerfil, String perfil, String idDpto, String dpto, int idDistrito, String distrito, String fechaLogueo, float rating, String imagen, String key, int idEstado, String desc_Estado) {
         Id = id;
         IdUsuario = idUsuario;
         IdTipoDocumento = idTipoDocumento;
@@ -84,11 +84,11 @@ public class Usuario {
         IdTipoDocumento = idTipoDocumento;
     }
 
-    public int getTipoDocumento() {
+    public String getTipoDocumento() {
         return TipoDocumento;
     }
 
-    public void setTipoDocumento(int tipoDocumento) {
+    public void setTipoDocumento(String tipoDocumento) {
         TipoDocumento = tipoDocumento;
     }
 

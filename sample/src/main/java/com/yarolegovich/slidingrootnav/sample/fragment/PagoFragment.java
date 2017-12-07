@@ -26,16 +26,21 @@ public class PagoFragment extends Fragment{
     private Button agregarTarjeta;
 
     private Context ctx = null;
+    View inflatedView = null;
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
 
+        this.inflatedView = inflater.inflate(R.layout.pago_fragment_layout, container, false);
         ctx = getActivity().getApplicationContext();
+
+        contenedorTarjetas = inflatedView.findViewById(R.id.pagoLlyContenedorTarjeta);
+        agregarTarjeta = inflatedView.findViewById(R.id.pagoBtnAgregarTarjeta);
 
         inicializar();
         escuchadores();
-        return inflater.inflate(R.layout.pago_fragment_layout, container, false);
+        return inflatedView;
     }
 
     public void inicializar(){

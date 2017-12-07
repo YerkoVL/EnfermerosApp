@@ -4,13 +4,13 @@
     android:background="@color/colorPrimary">
 
     <LinearLayout
-        android:id="@+id/llyContenedorTarjeta"
+        android:id="@+id/pagoLlyContenedorTarjeta"
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
         <Button
-            android:id="@+id/btnAgregarTarjeta"
+            android:id="@+id/pagoBtnAgregarTarjeta"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/fragment_pago_agregar_tarjeta"/>

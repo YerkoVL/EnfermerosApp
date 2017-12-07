@@ -1,12 +1,19 @@
 package com.yarolegovich.slidingrootnav.sample;
 
+import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.KeyEvent;
 import android.view.View;
+import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
-
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
 import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
@@ -17,12 +24,22 @@ import com.facebook.Profile;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 import com.flaviofaria.kenburnsview.KenBurnsView;
+import com.google.gson.Gson;
 import com.yarolegovich.lovelydialog.LovelyStandardDialog;
+import com.yarolegovich.slidingrootnav.sample.conexion.Singleton;
+import com.yarolegovich.slidingrootnav.sample.entity.Respuesta;
 import com.yarolegovich.slidingrootnav.sample.entity.Usuario;
+import com.yarolegovich.slidingrootnav.sample.tools.GenericAlerts;
 import com.yarolegovich.slidingrootnav.sample.tools.YourPreference;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import static com.yarolegovich.slidingrootnav.sample.tools.GenericStrings.CONTIN;
+import static com.yarolegovich.slidingrootnav.sample.tools.GenericStrings.INICIAL;
+import static com.yarolegovich.slidingrootnav.sample.tools.GenericStrings.LOGIN_PARAM_PASS;
+import static com.yarolegovich.slidingrootnav.sample.tools.GenericStrings.LOGIN_PARAM_USUARIO;
+import static com.yarolegovich.slidingrootnav.sample.tools.GenericStrings.URL_LOGIN;
 
 public class LoginActivity extends AppCompatActivity {
     LoginButton loginButton;
@@ -30,6 +47,16 @@ public class LoginActivity extends AppCompatActivity {
     private KenBurnsView mImg;
     private Usuario usuario;
     private YourPreference preferencias;
+    Gson gson = new Gson();
+    Context mCtx;
+    ProgressDialog progressDialog = null;
+    GenericAlerts alertas = new GenericAlerts();
+    String URL_LOG = "";
+
+    EditText EdtUsuario, EdtPass;
+    TextView TxtIngresar, TxtRegistrar;
+
+    String usuarioValidado,contrasenaValidada;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,7 +67,15 @@ public class LoginActivity extends AppCompatActivity {
         loginButton = findViewById(R.id.login_button);
         mImg = findViewById(R.id.imgFondo);
 
-        preferencias = YourPreference.getInstance(this);
+        mCtx = this;
+
+        progressDialog = new ProgressDialog(mCtx);
+        preferencias = YourPreference.getInstance(mCtx);
+
+        EdtUsuario = findViewById(R.id.logEdtUsuario);
+        EdtPass = findViewById(R.id.logEdtPassword);
+        TxtIngresar = findViewById(R.id.logBtnIngresar);
+        TxtRegistrar = findViewById(R.id.logBtnRegistrar);
 
         loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
@@ -60,13 +95,29 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
+        TxtIngresar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(validarTexto()){
+                    validarDatos();
+                }
+            }
+        });
+
+        TxtRegistrar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(LoginActivity.this,RegistroActivity.class));
+            }
+        });
+
         if(preferencias.sesionIniciada()){
             startActivity(new Intent(LoginActivity.this,SampleActivity.class));
         }
     }
 
     public void dirigirMenuPrincipal(){
-        Intent intent = new Intent(this,SampleActivity.class);
+        Intent intent = new Intent(mCtx,SampleActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
     }
@@ -137,6 +188,71 @@ public class LoginActivity extends AppCompatActivity {
                 })
                 .setNegativeButton(android.R.string.no, null)
                 .show();
+    }
+
+    public boolean validarTexto() {
+        boolean valor = false;
+
+        usuarioValidado = EdtUsuario.getText().toString();
+        contrasenaValidada = EdtPass.getText().toString();
+
+        if (!usuarioValidado.equals("")) {
+            if (!contrasenaValidada.equals("")) {
+                valor = true;
+            } else {
+                Toast.makeText(mCtx, "Ingrese Password", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            Toast.makeText(mCtx, "Ingrese Usuario", Toast.LENGTH_SHORT).show();
+        }
+        return valor;
+    }
+
+    public void validarDatos(){
+
+        URL_LOG = URL_LOGIN + INICIAL + LOGIN_PARAM_USUARIO + usuarioValidado
+                + CONTIN + LOGIN_PARAM_PASS + contrasenaValidada;
+
+        progressDialog.show();
+
+        StringRequest respuestaLogin = new StringRequest(Request.Method.GET,URL_LOG,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String Response) {
+
+                        if(Response!=null) {
+                            try {
+                                Usuario usuario = gson.fromJson(Response, Usuario.class);
+                                if(usuario.getNombres()!=null) {
+                                    preferencias.saveUsuario(usuario);
+                                    progressDialog.dismiss();
+                                    startActivity(new Intent(mCtx, SampleActivity.class));
+                                }else{
+                                    Respuesta respuesta = gson.fromJson(Response,Respuesta.class);
+                                    alertas.mensajeInfo("Fallo Login",respuesta.getMensaje(),mCtx);
+                                    progressDialog.dismiss();
+                                }
+                            }catch (Exception e){
+                                e.printStackTrace();
+                                alertas.mensajeInfo("Fallo Login","None",mCtx);
+                                progressDialog.dismiss();
+                            }
+                        }else{
+                            Respuesta respuesta = gson.fromJson(Response,Respuesta.class);
+                            alertas.mensajeInfo("Fallo Login",respuesta.getMensaje(),mCtx);
+                            progressDialog.dismiss();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError e) {
+                e.printStackTrace();
+                progressDialog.dismiss();
+                alertas.mensajeInfo("Fallo Login","Error Desconocido",mCtx);
+            }
+        });
+
+        Singleton.getInstance(mCtx).addToRequestQueue(respuestaLogin);
     }
 
     @Override

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.yarolegovich.slidingrootnav.sample.RecuperarActivity">
+
+    <com.github.florent37.materialtextfield.MaterialTextField
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_centerVertical="true"
+        app:mtf_backgroundColor="@color/colorPrimary"
+        android:id="@+id/lly"
+        app:mtf_hasFocus="false"
+        app:mtf_image="@drawable/ic_password"
+        app:mtf_labelColor="@color/com_facebook_button_background_color"
+        app:mtf_openKeyboardOnFocus="true">
+
+        <EditText
+            android:id="@+id/recEdtEmail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Ingrese su correo"
+            android:textColor="@color/com_facebook_button_background_color"
+            android:textSize="20sp" />
+    </com.github.florent37.materialtextfield.MaterialTextField>
+
+    <Button
+        android:id="@+id/recBtnRecuperar"
+        android:text="Recuperar"
+        android:layout_below="@+id/lly"
+        android:layout_marginTop="20dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+</RelativeLayout>
