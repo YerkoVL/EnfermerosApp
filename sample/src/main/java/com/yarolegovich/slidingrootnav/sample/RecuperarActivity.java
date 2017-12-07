@@ -71,6 +71,7 @@ public class RecuperarActivity extends AppCompatActivity {
         correoValidado = correo.getText().toString();
 
         if (!correoValidado.equals("")) {
+            valor = true;
         } else {
             Toast.makeText(mCtx, "Ingrese Correo", Toast.LENGTH_SHORT).show();
         }

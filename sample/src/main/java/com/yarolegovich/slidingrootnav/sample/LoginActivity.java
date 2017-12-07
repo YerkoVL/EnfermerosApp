@@ -54,7 +54,7 @@ public class LoginActivity extends AppCompatActivity {
     String URL_LOG = "";
 
     EditText EdtUsuario, EdtPass;
-    TextView TxtIngresar, TxtRegistrar;
+    TextView TxtIngresar, TxtRegistrar, TxtOlvido;
 
     String usuarioValidado,contrasenaValidada;
 
@@ -76,6 +76,7 @@ public class LoginActivity extends AppCompatActivity {
         EdtPass = findViewById(R.id.logEdtPassword);
         TxtIngresar = findViewById(R.id.logBtnIngresar);
         TxtRegistrar = findViewById(R.id.logBtnRegistrar);
+        TxtOlvido = findViewById(R.id.logTxtOlvido);
 
         loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
@@ -101,6 +102,13 @@ public class LoginActivity extends AppCompatActivity {
                 if(validarTexto()){
                     validarDatos();
                 }
+            }
+        });
+
+        TxtOlvido.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(LoginActivity.this,RecuperarActivity.class));
             }
         });
 

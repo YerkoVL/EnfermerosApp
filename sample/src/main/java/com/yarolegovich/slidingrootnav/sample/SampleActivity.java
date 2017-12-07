@@ -18,6 +18,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -94,6 +95,8 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
     private DirectionsRoute currentRoute;
     private MapboxDirections client;
 
+    private Button mapUbicacion;
+
     private SlidingRootNav slidingRootNav;
 
     private MapboxMap mapBoxGeneral;
@@ -167,6 +170,7 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
 
             // Set up autocomplete widget
             autocomplete = (GeocoderAutoCompleteView) findViewById(R.id.query);
+            mapUbicacion = findViewById(R.id.btnMiUbicacion);
             autocomplete.setAccessToken(Mapbox.getAccessToken());
             autocomplete.setType(GeocodingCriteria.TYPE_POI);
             autocomplete.setCountry("PE");
@@ -197,11 +201,18 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
                 }
             });
 
+            mapUbicacion.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    getRoute(origenFinal,destinoFinal);
+                }
+            });
+
         } else {
             mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentByTag("com.mapbox.map");
         }
 
-        //origenFinal = Position.fromCoordinates(-77.02776552199401,-12.093380082915322);
+        origenFinal = Position.fromCoordinates(-77.02776552199401,-12.093380082915322);
         //getRoute(origenFinal,destinoFinal);
 
         mapFragment.getMapAsync(new OnMapReadyCallback() {
