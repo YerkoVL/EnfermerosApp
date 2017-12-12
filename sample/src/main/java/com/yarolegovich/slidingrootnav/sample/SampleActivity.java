@@ -129,6 +129,7 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
         LinearLayoutManager MyLayoutManager = new LinearLayoutManager(this);
         MyLayoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
         Toolbar toolbar = findViewById(R.id.toolbar);
+        toolbar.setTitle("Inicio");
         setSupportActionBar(toolbar);
 
         preferencias = YourPreference.getInstance(this);
@@ -493,8 +494,8 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
                 .setTopColorRes(R.color.colorPrimary)
                 .setButtonsColorRes(R.color.colorAccent)
                 .setIcon(R.drawable.ic_enfermera)
-                .setTitle(R.string.cerrar_session)
-                .setMessage(R.string.cerrar_informacion)
+                .setTitle("¿Desea salir de la App?")
+                .setMessage("Se procederá a cerrar la sesión actual.")
                 .setPositiveButton(android.R.string.ok, new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {

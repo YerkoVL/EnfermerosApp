@@ -5,11 +5,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -50,6 +52,7 @@ public class RegistroActivity extends AppCompatActivity {
         setContentView(R.layout.activity_registro_fragment);
         mCtx = this;
         progressDialog = new ProgressDialog(mCtx);
+        getSupportActionBar().setTitle("Registro de cuenta");
 
         EdtNombres = findViewById(R.id.regEdtNombres);
         EdtApellidos = findViewById(R.id.regEdtApellidos);
@@ -93,16 +96,16 @@ public class RegistroActivity extends AppCompatActivity {
                             Toast.makeText(mCtx, "Ingrese Contraseña", Toast.LENGTH_SHORT).show();
                         }
                     } else {
-                        Toast.makeText(mCtx, "Ingrese Telefono", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(mCtx, "Ingrese telefono", Toast.LENGTH_SHORT).show();
                     }
                 } else {
-                    Toast.makeText(mCtx, "Ingrese Correo", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(mCtx,"Ingrese correo", Toast.LENGTH_SHORT).show();
                 }
             } else {
-                Toast.makeText(mCtx, "Ingrese Apellido", Toast.LENGTH_SHORT).show();
+                Toast.makeText(mCtx, "Ingrese apellidos", Toast.LENGTH_SHORT).show();
             }
         } else {
-            Toast.makeText(mCtx, "Ingrese Nombre", Toast.LENGTH_SHORT).show();
+            Toast.makeText(mCtx, "Ingrese nombres", Toast.LENGTH_SHORT).show();
         }
         return valor;
     }
@@ -123,7 +126,11 @@ public class RegistroActivity extends AppCompatActivity {
         if(c.length>=2) {
             for (int i = 0; i < c.length; i++) {
                 String nuevo = c[i];
-                apellidos = nuevo + "%";
+                if(i<=c.length-1) {
+                    apellidos = nuevo + "%";
+                }else{
+                    apellidos = nuevo;
+                }
                 apellidoValidado = apellidos;
             }
         }
@@ -142,7 +149,7 @@ public class RegistroActivity extends AppCompatActivity {
 
         progressDialog.show();
 
-        StringRequest respuestaLogin = new StringRequest(Request.Method.GET,URL_REG,
+        StringRequest respuestaRegistro = new StringRequest(Request.Method.GET,URL_REG,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String Response) {
@@ -156,7 +163,7 @@ public class RegistroActivity extends AppCompatActivity {
                                             .setTopColorRes(R.color.colorPrimary)
                                             .setButtonsColorRes(R.color.colorAccent)
                                             .setIcon(R.drawable.ic_enfermera)
-                                            .setTitle(R.string.accion_completado)
+                                            .setTitle("Completado")
                                             .setMessage(respuesta.getMensaje())
                                             .setPositiveButton(android.R.string.ok, new View.OnClickListener() {
                                                 @Override
@@ -167,18 +174,18 @@ public class RegistroActivity extends AppCompatActivity {
                                             .setNegativeButton(android.R.string.no, null)
                                             .show();
                                 }else{
-                                    alertas.mensajeInfo("" + R.string.accion_error,respuesta.getMensaje(),mCtx);
                                     progressDialog.dismiss();
+                                    alertas.mensajeInfo("Error",respuesta.getMensaje(),mCtx);
                                 }
                             }catch (Exception e){
                                 e.printStackTrace();
-                                alertas.mensajeInfo("" + R.string.accion_error,"None",mCtx);
                                 progressDialog.dismiss();
+                                alertas.mensajeInfo("Error","None",mCtx);
                             }
                         }else{
                             Respuesta respuesta = gson.fromJson(Response,Respuesta.class);
-                            alertas.mensajeInfo("" + R.string.accion_error,respuesta.getMensaje(),mCtx);
                             progressDialog.dismiss();
+                            alertas.mensajeInfo("Error",respuesta.getMensaje(),mCtx);
                         }
                     }
                 }, new Response.ErrorListener() {
@@ -186,10 +193,15 @@ public class RegistroActivity extends AppCompatActivity {
             public void onErrorResponse(VolleyError e) {
                 e.printStackTrace();
                 progressDialog.dismiss();
-                alertas.mensajeInfo("" + R.string.accion_error,"Error Desconocido",mCtx);
+                alertas.mensajeInfo("Error","Error desconocido",mCtx);
             }
         });
 
-        Singleton.getInstance(mCtx).addToRequestQueue(respuestaLogin);
+        respuestaRegistro.setRetryPolicy(new DefaultRetryPolicy(
+                5000,
+                2,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+
+        Singleton.getInstance(mCtx).addToRequestQueue(respuestaRegistro);
     }
 }

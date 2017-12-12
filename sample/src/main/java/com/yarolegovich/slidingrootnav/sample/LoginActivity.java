@@ -11,6 +11,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -169,11 +170,6 @@ public class LoginActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
                 try {
-                    usuario.setPassword(object.getString("password"));
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-                try {
                     usuario.setDireccion(object.getString("address"));
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -234,7 +230,7 @@ public class LoginActivity extends AppCompatActivity {
 
         progressDialog.show();
 
-        StringRequest respuestaLogin = new StringRequest(Request.Method.GET,URL_REG,
+        StringRequest respuestaRegistroXfb = new StringRequest(Request.Method.GET,URL_REG,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String Response) {
@@ -248,7 +244,7 @@ public class LoginActivity extends AppCompatActivity {
                                             .setTopColorRes(R.color.colorPrimary)
                                             .setButtonsColorRes(R.color.colorAccent)
                                             .setIcon(R.drawable.ic_enfermera)
-                                            .setTitle(R.string.accion_completado)
+                                            .setTitle("Completado")
                                             .setMessage(respuesta.getMensaje())
                                             .setPositiveButton(android.R.string.ok, new View.OnClickListener() {
                                                 @Override
@@ -259,17 +255,17 @@ public class LoginActivity extends AppCompatActivity {
                                             .setNegativeButton(android.R.string.no, null)
                                             .show();
                                 }else{
-                                    alertas.mensajeInfo("" + R.string.accion_error,respuesta.getMensaje(),mCtx);
+                                    alertas.mensajeInfo("Error",respuesta.getMensaje(),mCtx);
                                     progressDialog.dismiss();
                                 }
                             }catch (Exception e){
                                 e.printStackTrace();
-                                alertas.mensajeInfo("" + R.string.accion_error,"None",mCtx);
+                                alertas.mensajeInfo("Error","None",mCtx);
                                 progressDialog.dismiss();
                             }
                         }else{
                             Respuesta respuesta = gson.fromJson(Response,Respuesta.class);
-                            alertas.mensajeInfo("" + R.string.accion_error,respuesta.getMensaje(),mCtx);
+                            alertas.mensajeInfo("Error",respuesta.getMensaje(),mCtx);
                             progressDialog.dismiss();
                         }
                     }
@@ -278,11 +274,16 @@ public class LoginActivity extends AppCompatActivity {
             public void onErrorResponse(VolleyError e) {
                 e.printStackTrace();
                 progressDialog.dismiss();
-                alertas.mensajeInfo("" + R.string.accion_error,"Error Desconocido",mCtx);
+                alertas.mensajeInfo("Error","Error Desconocido",mCtx);
             }
         });
 
-        Singleton.getInstance(mCtx).addToRequestQueue(respuestaLogin);
+        respuestaRegistroXfb.setRetryPolicy(new DefaultRetryPolicy(
+                5000,
+                2,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+
+        Singleton.getInstance(mCtx).addToRequestQueue(respuestaRegistroXfb);
     }
 
     public void finalizarActividad(){
@@ -290,8 +291,8 @@ public class LoginActivity extends AppCompatActivity {
                 .setTopColorRes(R.color.colorPrimary)
                 .setButtonsColorRes(R.color.colorAccent)
                 .setIcon(R.drawable.ic_enfermera)
-                .setTitle(R.string.salir_app)
-                .setMessage(R.string.salir_informacion)
+                .setTitle("¿Desea salir de la App?")
+                .setMessage("Se procederá a cerrar y eliminar configuración general.")
                 .setPositiveButton(android.R.string.ok, new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -313,10 +314,10 @@ public class LoginActivity extends AppCompatActivity {
             if (!contrasenaValidada.equals("")) {
                 valor = true;
             } else {
-                Toast.makeText(mCtx, R.string.falta_password, Toast.LENGTH_SHORT).show();
+                Toast.makeText(mCtx, "Ingrese contraseña", Toast.LENGTH_SHORT).show();
             }
         } else {
-            Toast.makeText(mCtx, R.string.falta_usuario, Toast.LENGTH_SHORT).show();
+            Toast.makeText(mCtx, "Ingrese usuario", Toast.LENGTH_SHORT).show();
         }
         return valor;
     }
@@ -342,17 +343,17 @@ public class LoginActivity extends AppCompatActivity {
                                     startActivity(new Intent(mCtx, SampleActivity.class));
                                 }else{
                                     Respuesta respuesta = gson.fromJson(Response,Respuesta.class);
-                                    alertas.mensajeInfo("" + R.string.accion_error,respuesta.getMensaje(),mCtx);
+                                    alertas.mensajeInfo("Error",respuesta.getMensaje(),mCtx);
                                     progressDialog.dismiss();
                                 }
                             }catch (Exception e){
                                 e.printStackTrace();
-                                alertas.mensajeInfo("" + R.string.accion_error,"None",mCtx);
+                                alertas.mensajeInfo("Error","None",mCtx);
                                 progressDialog.dismiss();
                             }
                         }else{
                             Respuesta respuesta = gson.fromJson(Response,Respuesta.class);
-                            alertas.mensajeInfo("" + R.string.accion_error,respuesta.getMensaje(),mCtx);
+                            alertas.mensajeInfo("Error",respuesta.getMensaje(),mCtx);
                             progressDialog.dismiss();
                         }
                     }
@@ -361,9 +362,14 @@ public class LoginActivity extends AppCompatActivity {
             public void onErrorResponse(VolleyError e) {
                 e.printStackTrace();
                 progressDialog.dismiss();
-                alertas.mensajeInfo("" + R.string.accion_error,"" + R.string.accion_error_desconocido,mCtx);
+                alertas.mensajeInfo("Error","Error desconocido",mCtx);
             }
         });
+
+        respuestaLogin.setRetryPolicy(new DefaultRetryPolicy(
+                5000,
+                2,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
 
         Singleton.getInstance(mCtx).addToRequestQueue(respuestaLogin);
     }

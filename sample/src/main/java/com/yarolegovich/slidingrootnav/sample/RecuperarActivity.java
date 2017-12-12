@@ -5,11 +5,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -39,6 +41,7 @@ public class RecuperarActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_recuperar);
+        getSupportActionBar().setTitle("Recuperar cuenta");
 
         mCtx = this;
 
@@ -76,7 +79,7 @@ public class RecuperarActivity extends AppCompatActivity {
 
         progressDialog.show();
 
-        StringRequest respuestaLogin = new StringRequest(Request.Method.GET,URL_REC,
+        StringRequest respuestaRecuperada = new StringRequest(Request.Method.GET,URL_REC,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String Response) {
@@ -124,7 +127,12 @@ public class RecuperarActivity extends AppCompatActivity {
             }
         });
 
-        Singleton.getInstance(mCtx).addToRequestQueue(respuestaLogin);
+        respuestaRecuperada.setRetryPolicy(new DefaultRetryPolicy(
+                5000,
+                2,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+
+        Singleton.getInstance(mCtx).addToRequestQueue(respuestaRecuperada);
     }
 
 }
