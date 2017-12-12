@@ -4,7 +4,6 @@
     <string-array name="ld_activityScreenTitles">
         <item>Inicio</item>
         <item>Mi perfil</item>
-        <item>Mensaje</item>
         <item>Tarjetas</item>
         <item>Historial</item>
         <item>Favoritos</item>
@@ -15,10 +14,9 @@
     <array name="ld_activityScreenIcons">
         <item>@drawable/ic_home_outline_grey600_24dp</item>
         <item>@drawable/ic_account_outline_grey600_24dp</item>
-        <item>@drawable/ic_email_outline_grey600_24dp</item>
-        <item>@drawable/ic_cart_outline_grey600_24dp</item>
-        <item>@drawable/ic_cart_outline_grey600_24dp</item>
-        <item>@drawable/ic_cart_outline_grey600_24dp</item>
+        <item>@drawable/icn_credit_card</item>
+        <item>@drawable/icn_history</item>
+        <item>@drawable/icn_favorites</item>
         <item>0</item>
         <item>@drawable/ic_logout_grey600_24dp</item>
     </array>

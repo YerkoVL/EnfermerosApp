@@ -84,11 +84,10 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
 
     private static final int POS_DASHBOARD = 0;
     private static final int POS_ACCOUNT = 1;
-    private static final int POS_MESSAGES = 2;
-    private static final int POS_CARD = 3;
-    private static final int POS_HISTORY = 4;
-    private static final int POS_FAVORITES = 5;
-    private static final int POS_LOGOUT = 7;
+    private static final int POS_CARD = 2;
+    private static final int POS_HISTORY = 3;
+    private static final int POS_FAVORITES = 4;
+    private static final int POS_LOGOUT = 6;
 
     private String[] screenTitles;
     private Drawable[] screenIcons;
@@ -237,7 +236,6 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
         DrawerAdapter adapter = new DrawerAdapter(Arrays.asList(
                 createItemFor(POS_DASHBOARD).setChecked(true),
                 createItemFor(POS_ACCOUNT),
-                createItemFor(POS_MESSAGES),
                 createItemFor(POS_CARD),
                 createItemFor(POS_HISTORY),
                 createItemFor(POS_FAVORITES),
@@ -363,10 +361,6 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
             ocultarCampos();
             android.support.v4.app.Fragment perfil = new PerfilFragment();
             showFragment(perfil);
-        }else if(position == POS_MESSAGES){
-            ocultarCampos();
-            Fragment perfil = new Fragment();
-            showFragment(perfil);
         }else if(position == POS_CARD){
             ocultarCampos();
             android.support.v4.app.Fragment pago = new PagoFragment();
@@ -455,11 +449,13 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
     public void ocultarCampos(){
         recyclerViewServicios.setVisibility(View.GONE);
         autocomplete.setVisibility(View.GONE);
+        mapUbicacion.setVisibility(View.GONE);
     }
 
     public void mostrarCampos(){
         recyclerViewServicios.setVisibility(View.VISIBLE);
         autocomplete.setVisibility(View.VISIBLE);
+        mapUbicacion.setVisibility(View.VISIBLE);
     }
 
     public void asignarVariablesTemporales(){
@@ -467,18 +463,18 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
             inyectableIntramuscular.setImagen(R.drawable.img_inyectable);
             inyectableIntramuscular.setServicio("Inyectable Intramuscular");
             inyectableIntramuscular.setPrecio(25);
-            inyectableIntramuscular.setTiempoEstimado("Aproximadamente 15 minutos atención.");
+            inyectableIntramuscular.setTiempoEstimado("A 15 Minutos.");
         ServiceDoctor inyectableIntravenoso = new ServiceDoctor();
             inyectableIntravenoso.setImagen(R.drawable.img_inyectable_intravenoso);
             inyectableIntravenoso.setServicio("Inyectable Intramuscular");
             inyectableIntravenoso.setPrecio(25);
-            inyectableIntravenoso.setTiempoEstimado("Aproximadamente 40 minutos atención.");
+            inyectableIntravenoso.setTiempoEstimado("A 40 minutos.");
 
         ServiceDoctor colocacionSonda = new ServiceDoctor();
             colocacionSonda.setImagen(R.drawable.img_sonda);
             colocacionSonda.setServicio("Colocación de Sonda");
             colocacionSonda.setPrecio(25);
-            colocacionSonda.setTiempoEstimado("Aproximadamente 30 minutos atención.");
+            colocacionSonda.setTiempoEstimado("A 30 minutos.");
         listaItems.add(inyectableIntravenoso);
         listaItems.add(inyectableIntramuscular);
         listaItems.add(colocacionSonda);

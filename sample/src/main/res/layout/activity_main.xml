@@ -10,11 +10,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <android.support.v7.widget.Toolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/colorPrimary" />
     </android.support.design.widget.AppBarLayout>
 
     <RelativeLayout
@@ -56,6 +51,12 @@
                 android:layout_gravity="end|center"
                 android:background="@drawable/icn_location"
                 android:gravity="end|clip_vertical" />
+
+            <android.support.v7.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/colorPrimary" />
 
         </FrameLayout>
 

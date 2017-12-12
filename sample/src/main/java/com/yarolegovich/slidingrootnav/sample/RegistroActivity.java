@@ -15,6 +15,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.google.gson.Gson;
+import com.yarolegovich.lovelydialog.LovelyStandardDialog;
 import com.yarolegovich.slidingrootnav.sample.conexion.Singleton;
 import com.yarolegovich.slidingrootnav.sample.entity.Respuesta;
 import com.yarolegovich.slidingrootnav.sample.tools.GenericAlerts;
@@ -151,8 +152,20 @@ public class RegistroActivity extends AppCompatActivity {
                                 Respuesta respuesta = gson.fromJson(Response, Respuesta.class);
                                 if(respuesta.getValor()==true) {
                                     progressDialog.dismiss();
-                                    alertas.mensajeInfo("Éxito",respuesta.getMensaje(),mCtx);
-                                    startActivity(new Intent(mCtx, LoginActivity.class));
+                                    new LovelyStandardDialog(mCtx)
+                                            .setTopColorRes(R.color.colorPrimary)
+                                            .setButtonsColorRes(R.color.colorAccent)
+                                            .setIcon(R.drawable.ic_enfermera)
+                                            .setTitle("Éxito")
+                                            .setMessage(respuesta.getMensaje())
+                                            .setPositiveButton(android.R.string.ok, new View.OnClickListener() {
+                                                @Override
+                                                public void onClick(View v) {
+                                                    startActivity(new Intent(mCtx, LoginActivity.class));
+                                                }
+                                            })
+                                            .setNegativeButton(android.R.string.no, null)
+                                            .show();
                                 }else{
                                     alertas.mensajeInfo("Fallo Login",respuesta.getMensaje(),mCtx);
                                     progressDialog.dismiss();
