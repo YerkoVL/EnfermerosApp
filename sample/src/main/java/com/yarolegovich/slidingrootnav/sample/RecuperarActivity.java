@@ -3,8 +3,8 @@ package com.yarolegovich.slidingrootnav.sample;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -15,21 +15,13 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.google.gson.Gson;
+import com.yarolegovich.lovelydialog.LovelyStandardDialog;
 import com.yarolegovich.slidingrootnav.sample.conexion.Singleton;
 import com.yarolegovich.slidingrootnav.sample.entity.Respuesta;
 import com.yarolegovich.slidingrootnav.sample.tools.GenericAlerts;
 
-import static com.yarolegovich.slidingrootnav.sample.tools.GenericStrings.CONTIN;
 import static com.yarolegovich.slidingrootnav.sample.tools.GenericStrings.INICIAL;
-import static com.yarolegovich.slidingrootnav.sample.tools.GenericStrings.PARAM_APELLIDOS;
-import static com.yarolegovich.slidingrootnav.sample.tools.GenericStrings.PARAM_CORREO;
 import static com.yarolegovich.slidingrootnav.sample.tools.GenericStrings.PARAM_EMAIL;
-import static com.yarolegovich.slidingrootnav.sample.tools.GenericStrings.PARAM_LATITUD;
-import static com.yarolegovich.slidingrootnav.sample.tools.GenericStrings.PARAM_LONGITUD;
-import static com.yarolegovich.slidingrootnav.sample.tools.GenericStrings.PARAM_NOMBRES;
-import static com.yarolegovich.slidingrootnav.sample.tools.GenericStrings.PARAM_PASS;
-import static com.yarolegovich.slidingrootnav.sample.tools.GenericStrings.PARAM_TELEFONO;
-import static com.yarolegovich.slidingrootnav.sample.tools.GenericStrings.URL_REGISTRO;
 import static com.yarolegovich.slidingrootnav.sample.tools.GenericStrings.URL_RESTAURAR;
 
 public class RecuperarActivity extends AppCompatActivity {
@@ -94,8 +86,20 @@ public class RecuperarActivity extends AppCompatActivity {
                                 Respuesta respuesta = gson.fromJson(Response, Respuesta.class);
                                 if(respuesta.getValor()==true) {
                                     progressDialog.dismiss();
-                                    alertas.mensajeInfo("Éxito",respuesta.getMensaje(),mCtx);
-                                    startActivity(new Intent(mCtx, LoginActivity.class));
+                                    new LovelyStandardDialog(mCtx)
+                                            .setTopColorRes(R.color.colorPrimary)
+                                            .setButtonsColorRes(R.color.colorAccent)
+                                            .setIcon(R.drawable.ic_enfermera)
+                                            .setTitle("Éxito")
+                                            .setMessage(respuesta.getMensaje())
+                                            .setPositiveButton(android.R.string.ok, new View.OnClickListener() {
+                                                @Override
+                                                public void onClick(View v) {
+                                                    startActivity(new Intent(mCtx, LoginActivity.class));
+                                                }
+                                            })
+                                            .setNegativeButton(android.R.string.no, null)
+                                            .show();
                                 }else{
                                     alertas.mensajeInfo("Fallo Recuperar",respuesta.getMensaje(),mCtx);
                                     progressDialog.dismiss();

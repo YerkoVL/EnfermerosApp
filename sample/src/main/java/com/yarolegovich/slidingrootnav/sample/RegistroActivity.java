@@ -156,7 +156,7 @@ public class RegistroActivity extends AppCompatActivity {
                                             .setTopColorRes(R.color.colorPrimary)
                                             .setButtonsColorRes(R.color.colorAccent)
                                             .setIcon(R.drawable.ic_enfermera)
-                                            .setTitle("Éxito")
+                                            .setTitle(R.string.accion_completado)
                                             .setMessage(respuesta.getMensaje())
                                             .setPositiveButton(android.R.string.ok, new View.OnClickListener() {
                                                 @Override
@@ -167,17 +167,17 @@ public class RegistroActivity extends AppCompatActivity {
                                             .setNegativeButton(android.R.string.no, null)
                                             .show();
                                 }else{
-                                    alertas.mensajeInfo("Fallo Login",respuesta.getMensaje(),mCtx);
+                                    alertas.mensajeInfo("" + R.string.accion_error,respuesta.getMensaje(),mCtx);
                                     progressDialog.dismiss();
                                 }
                             }catch (Exception e){
                                 e.printStackTrace();
-                                alertas.mensajeInfo("Fallo Login","None",mCtx);
+                                alertas.mensajeInfo("" + R.string.accion_error,"None",mCtx);
                                 progressDialog.dismiss();
                             }
                         }else{
                             Respuesta respuesta = gson.fromJson(Response,Respuesta.class);
-                            alertas.mensajeInfo("Fallo Login",respuesta.getMensaje(),mCtx);
+                            alertas.mensajeInfo("" + R.string.accion_error,respuesta.getMensaje(),mCtx);
                             progressDialog.dismiss();
                         }
                     }
@@ -186,7 +186,7 @@ public class RegistroActivity extends AppCompatActivity {
             public void onErrorResponse(VolleyError e) {
                 e.printStackTrace();
                 progressDialog.dismiss();
-                alertas.mensajeInfo("Fallo Login","Error Desconocido",mCtx);
+                alertas.mensajeInfo("" + R.string.accion_error,"Error Desconocido",mCtx);
             }
         });
 

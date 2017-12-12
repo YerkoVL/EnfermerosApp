@@ -128,6 +128,8 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
         recyclerViewServicios.setHasFixedSize(true);
         LinearLayoutManager MyLayoutManager = new LinearLayoutManager(this);
         MyLayoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
         preferencias = YourPreference.getInstance(this);
 
@@ -140,9 +142,6 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
 
         gson = new Gson();
         alertas = new GenericAlerts();
-
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
 
         if (savedInstanceState == null) {
 
@@ -494,8 +493,8 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
                 .setTopColorRes(R.color.colorPrimary)
                 .setButtonsColorRes(R.color.colorAccent)
                 .setIcon(R.drawable.ic_enfermera)
-                .setTitle("¿Desea cerrar sesión?")
-                .setMessage("Se cerrará todas las sesiones iniciadas.")
+                .setTitle(R.string.cerrar_session)
+                .setMessage(R.string.cerrar_informacion)
                 .setPositiveButton(android.R.string.ok, new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {

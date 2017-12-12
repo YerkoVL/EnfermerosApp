@@ -13,4 +13,22 @@
     <string name="direction_to_go">¿Donde necesita la atención?</string>
 
     <string name="fragment_pago_agregar_tarjeta">Agregar Tarjeta</string>
+
+    <string name="accion_completado">Completado</string>
+    <string name="accion_error">Error</string>
+    <string name="accion_error_desconocido">Error desconocido</string>
+
+    <string name="salir_app">¿Desea salir de la App?</string>
+    <string name="salir_informacion">Se procederá a cerrar y eliminar configuración general.</string>
+
+    <string name="cerrar_session">¿Desea salir de la App?</string>
+    <string name="cerrar_informacion">Se procederá a cerrar la sesión actual.</string>
+
+    <string name="falta_usuario">Ingrese usuario</string>
+    <string name="falta_password">Ingrese contraseña</string>
+    <string name="falta_nombres">Ingrese nombres</string>
+    <string name="falta_apellidos">Ingrese apellidos</string>
+    <string name="falta_correo">Ingrese correo</string>
+    <string name="falta_telefono">Ingrese telefono</string>
+
 </resources>
