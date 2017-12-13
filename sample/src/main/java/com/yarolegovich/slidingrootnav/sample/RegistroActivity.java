@@ -3,9 +3,8 @@ package com.yarolegovich.slidingrootnav.sample;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.Toolbar;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -52,7 +51,6 @@ public class RegistroActivity extends AppCompatActivity {
         setContentView(R.layout.activity_registro_fragment);
         mCtx = this;
         progressDialog = new ProgressDialog(mCtx);
-        getSupportActionBar().setTitle("Registro de cuenta");
 
         EdtNombres = findViewById(R.id.regEdtNombres);
         EdtApellidos = findViewById(R.id.regEdtApellidos);
@@ -78,13 +76,11 @@ public class RegistroActivity extends AppCompatActivity {
     public boolean validarTexto() {
         boolean valor = false;
 
-        nombreValidado = EdtNombres.getText().toString();
-        validarNombres(nombreValidado);
-        apellidoValidado = EdtApellidos.getText().toString();
-        validarApellido(apellidoValidado);
-        correoValidado = EdtCorreo.getText().toString();
-        telefonoValidado = EdtTelefono.getText().toString();
-        passValidado = EdtPass.getText().toString();
+        nombreValidado = validarTexto(EdtNombres.getText().toString());
+        apellidoValidado = validarTexto(EdtApellidos.getText().toString());
+        correoValidado = validarOtro(EdtCorreo.getText().toString());
+        telefonoValidado = validarOtro(EdtTelefono.getText().toString());
+        passValidado = validarOtro(EdtPass.getText().toString());
 
         if (!nombreValidado.equals("")) {
             if (!apellidoValidado.equals("")) {
@@ -110,30 +106,20 @@ public class RegistroActivity extends AppCompatActivity {
         return valor;
     }
 
-    public void validarNombres(String nombres){
-        String c[] = nombres.split(" ");
-        if(c.length>=2) {
-            for (int i = 0; i < c.length; i++) {
-                String nuevo = c[i];
-                nombres = nuevo + "%";
-                nombreValidado = nombres;
-            }
-        }
+    public String validarTexto(String texto){
+        String nuevoTexto = "";
+
+        nuevoTexto = texto.replace(" ", "%25");
+
+        return nuevoTexto;
     }
 
-    public void validarApellido(String apellidos){
-        String c[] = apellidos.split(" ");
-        if(c.length>=2) {
-            for (int i = 0; i < c.length; i++) {
-                String nuevo = c[i];
-                if(i<=c.length-1) {
-                    apellidos = nuevo + "%";
-                }else{
-                    apellidos = nuevo;
-                }
-                apellidoValidado = apellidos;
-            }
-        }
+    public String validarOtro(String texto){
+        String nuevoTexto = "";
+
+        nuevoTexto = texto.replace(" ", "");
+
+        return nuevoTexto;
     }
 
     public void validarDatos(){

@@ -23,6 +23,7 @@ import com.facebook.FacebookException;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 import com.facebook.Profile;
+import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 import com.flaviofaria.kenburnsview.KenBurnsView;
@@ -102,7 +103,6 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onSuccess(LoginResult loginResult) {
                 obtenerDatos(loginResult.getAccessToken());
-                dirigirMenuPrincipal();
             }
 
             @Override
@@ -120,7 +120,7 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 if(validarTexto()){
-                    validarDatos();
+                    validarDatos(usuarioValidado,contrasenaValidada);
                 }
             }
         });
@@ -157,10 +157,10 @@ public class LoginActivity extends AppCompatActivity {
                 Profile profile = Profile.getCurrentProfile();
                 usuario = new Usuario();
                 usuario.setId(profile.getId().toString());
-                usuario.setNombres(profile.getName());
+                usuario.setNombres(validarEspacios(profile.getName()));
                 //String pruebaNombre = profile.getMiddleName();
-                usuario.setNombreUsuario(profile.getFirstName());
-                usuario.setPassword(profile.getFirstName() + "|" + profile.getId());
+                usuario.setNombreUsuario(validarEspacios(profile.getFirstName()));
+                usuario.setPassword(validarOtro(profile.getFirstName() + "_" + profile.getLastName()));
                 usuario.setApellidos(validarEspacios(profile.getLastName()));
                 usuario.setImagen(profile.getProfilePictureUri(100,100).toString());
                 usuario.setPerfil("CLIENTE");
@@ -189,7 +189,7 @@ public class LoginActivity extends AppCompatActivity {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                registrarUsuarioFB(usuario);
+                validarExistenciaFB(usuario);
             }
         });
         Bundle adicional = new Bundle();
@@ -205,16 +205,78 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public String validarEspacios(String texto){
-        String nuevo[] = texto.split(" ");
-        String textoValidado = "";
+        String nuevoTexto = "";
 
-        for (int i=0;i<nuevo.length;i++){
-            textoValidado = nuevo[i].toString();
-            if(i<=nuevo.length-1) {
-                textoValidado = textoValidado + "%";
+        nuevoTexto = texto.replace(" ", "%25");
+
+        return nuevoTexto;
+    }
+
+    public String validarOtro(String texto){
+        String nuevoTexto = "";
+
+        nuevoTexto = texto.replace(" ", "_");
+
+        return nuevoTexto;
+    }
+
+    public void validarExistenciaFB(final Usuario user){
+
+        URL_LOG = URL_LOGIN + INICIAL + LOGIN_PARAM_USUARIO + user.getCorreo()
+                + CONTIN + LOGIN_PARAM_PASS + user.getPassword();
+
+        progressDialog.show();
+
+        StringRequest respuestaLogin = new StringRequest(Request.Method.GET,URL_LOG,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String Response) {
+
+                        if(Response!=null) {
+                            try {
+                                Usuario usuario = gson.fromJson(Response, Usuario.class);
+                                if(usuario.getNombres()!=null) {
+                                    preferencias.saveUsuario(usuario);
+                                    progressDialog.dismiss();
+                                    startActivity(new Intent(mCtx,SampleActivity.class));
+                                }else{
+                                    Respuesta respuesta = gson.fromJson(Response,Respuesta.class);
+                                    if(respuesta.getMensaje().equals("Usuario no ha activado su cuenta")) {
+                                        LoginManager.getInstance().logOut();
+                                        progressDialog.dismiss();
+                                        alertas.mensajeInfo("Error",respuesta.getMensaje(),mCtx);
+                                    }else {
+                                        progressDialog.dismiss();
+                                        registrarUsuarioFB(user);
+                                    }
+                                }
+                            }catch (Exception e){
+                                e.printStackTrace();
+                                progressDialog.dismiss();
+                                registrarUsuarioFB(user);
+                            }
+                        }else{
+                            Respuesta respuesta = gson.fromJson(Response,Respuesta.class);
+                            progressDialog.dismiss();
+                            registrarUsuarioFB(user);
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError e) {
+                e.printStackTrace();
+                progressDialog.dismiss();
+                registrarUsuarioFB(user);
             }
-        }
-        return textoValidado;
+        });
+
+        respuestaLogin.setRetryPolicy(new DefaultRetryPolicy(
+                5000,
+                2,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+
+        Singleton.getInstance(mCtx).addToRequestQueue(respuestaLogin);
+
     }
 
     public void registrarUsuarioFB(Usuario usuario){
@@ -226,6 +288,7 @@ public class LoginActivity extends AppCompatActivity {
                 + CONTIN + PARAM_PASS + usuario.getPassword()
                 + CONTIN + PARAM_LONGITUD + 0
                 + CONTIN + PARAM_LATITUD + 0;
+
         //Nombres=Pepe&Apellidos=Vasquez&Correo=micorreo@gmail.com&Telefono=12345678&Contrasena=654321&Longitud=0&Latitud=0
 
         progressDialog.show();
@@ -249,21 +312,24 @@ public class LoginActivity extends AppCompatActivity {
                                             .setPositiveButton(android.R.string.ok, new View.OnClickListener() {
                                                 @Override
                                                 public void onClick(View v) {
-                                                    startActivity(new Intent(mCtx, LoginActivity.class));
+                                                    dirigirMenuPrincipal();
                                                 }
                                             })
                                             .setNegativeButton(android.R.string.no, null)
                                             .show();
                                 }else{
                                     alertas.mensajeInfo("Error",respuesta.getMensaje(),mCtx);
+                                    LoginManager.getInstance().logOut();
                                     progressDialog.dismiss();
                                 }
                             }catch (Exception e){
                                 e.printStackTrace();
                                 alertas.mensajeInfo("Error","None",mCtx);
                                 progressDialog.dismiss();
+                                LoginManager.getInstance().logOut();
                             }
                         }else{
+                            LoginManager.getInstance().logOut();
                             Respuesta respuesta = gson.fromJson(Response,Respuesta.class);
                             alertas.mensajeInfo("Error",respuesta.getMensaje(),mCtx);
                             progressDialog.dismiss();
@@ -273,6 +339,7 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onErrorResponse(VolleyError e) {
                 e.printStackTrace();
+                LoginManager.getInstance().logOut();
                 progressDialog.dismiss();
                 alertas.mensajeInfo("Error","Error Desconocido",mCtx);
             }
@@ -322,10 +389,10 @@ public class LoginActivity extends AppCompatActivity {
         return valor;
     }
 
-    public void validarDatos(){
+    public void validarDatos(String usuario,String pass){
 
-        URL_LOG = URL_LOGIN + INICIAL + LOGIN_PARAM_USUARIO + usuarioValidado
-                + CONTIN + LOGIN_PARAM_PASS + contrasenaValidada;
+        URL_LOG = URL_LOGIN + INICIAL + LOGIN_PARAM_USUARIO + usuario
+                + CONTIN + LOGIN_PARAM_PASS + pass;
 
         progressDialog.show();
 
